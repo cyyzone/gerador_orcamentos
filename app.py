@@ -16,12 +16,12 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 
 DADOS_EMPRESA = {
-    "razao_social": "VCS REFORMAS EM GERAL",
-    "nome_responsavel": "VALTEMIRO CAETANO DE SOUZA",
-    "cnpj": "23.947.352/0001-54",
-    "inscricao_municipal": "07.06.736.521-8",
-    "endereco": "Rua Tenente José Carlos Lopes de Souza, 42 A – Borda do Campo – SJP",
-    "telefone": "(41) 3282-9499 / (41) 98522-1549"
+    "razao_social": "NOME DA EMPRESA",
+    "nome_responsavel": "NOME DO RESPONSÁVEL",
+    "cnpj": "00.000.000/0001-22",
+    "inscricao_municipal": "07.05.744.522-9",
+    "endereco": "Endereço completo",
+    "telefone": "(41) 90000-1549"
 }
 # ---------------------------------------------------
 
