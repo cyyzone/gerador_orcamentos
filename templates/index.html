@@ -5,16 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <title>Gerador de Orçamentos</title>
-    <!--<style>
-        body { font-family: Arial, sans-serif; margin: 2em; background-color: #f4f4f9; }
-        .container { max-width: 700px; margin: auto; background: white; padding: 2em; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        h1, h2 { text-align: center; color: #333; }
-        label { display: block; margin-top: 1em; margin-bottom: 0.5em; font-weight: bold; }
-        input[type="text"], textarea { width: 100%; padding: 0.8em; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
-        textarea { resize: vertical; }
-        button { display: block; width: 100%; padding: 1em; background-color: #007BFF; color: white; border: none; border-radius: 4px; font-size: 1.1em; cursor: pointer; margin-top: 2em; }
-        button:hover { background-color: #0056b3; }
-    </style> -->
 </head>
 <body>
     <div class="container">
@@ -55,13 +45,32 @@
         let isRecognizing = false;
 
         // Configurações do reconhecimento de voz
-        recognition.continuous = true; // Permite falar continuamente
-        recognition.lang = 'pt-BR';    // Define o idioma para Português do Brasil
-        recognition.interimResults = true; // Mostra resultados parciais enquanto você fala
+        recognition.continuous = true;
+        recognition.lang = 'pt-BR';
+        recognition.interimResults = true;
+
+
+        // ##### FUNÇÃO PARA PROCESSAR COMANDOS DE VOZ AQUI #####
+    
+        function processarComandos(texto) {
+            let textoProcessado = texto;
+            // Usei expressões regulares (regex) para substituir os comandos
+            // O 'gi' no final significa 'global' (substituir todas as ocorrências) e 'case-insensitive' (ignorar maiúsculas/minúsculas)
+            textoProcessado = textoProcessado.replace(/\s+vírgula/gi, ',');
+            textoProcessado = textoProcessado.replace(/\s+ponto/gi, '.');
+            textoProcessado = textoProcessado.replace(/\s+ponto de interrogação/gi, '?');
+            textoProcessado = textoProcessado.replace(/\s+ponto de exclamação/gi, '!');
+            textoProcessado = textoProcessado.replace(/nova linha/gi, '\n');
+            textoProcessado = textoProcessado.replace(/próxima linha/gi, '\n');
+            return textoProcessado;
+        }
+
 
         // Evento de clique no botão do microfone
         micButton.addEventListener('click', () => {
             if (!isRecognizing) {
+                // Se o campo já tiver texto, começamos a adicionar a partir dele
+                finalTranscript = servicesTextarea.value;
                 recognition.start();
             } else {
                 recognition.stop();
@@ -71,7 +80,7 @@
         // Quando o reconhecimento começa
         recognition.onstart = () => {
             isRecognizing = true;
-            micButton.textContent = '🔴'; // Muda o ícone para indicar que está gravando
+            micButton.textContent = '🔴';
             micButton.classList.add('recording');
             console.log('Reconhecimento de voz iniciado.');
         };
@@ -79,7 +88,7 @@
         // Quando o reconhecimento termina
         recognition.onend = () => {
             isRecognizing = false;
-            micButton.textContent = '🎤'; // Volta ao ícone original
+            micButton.textContent = '🎤';
             micButton.classList.remove('recording');
             console.log('Reconhecimento de voz terminado.');
         };
@@ -87,7 +96,6 @@
         // Quando um erro acontece
         recognition.onerror = (event) => {
             console.error('Erro no reconhecimento de voz:', event.error);
-            // Se o erro for 'no-speech', apenas paramos sem fazer nada.
             if (event.error !== 'no-speech') {
                 alert(`Erro no reconhecimento de voz: ${event.error}`);
             }
@@ -99,16 +107,24 @@
         recognition.onresult = (event) => {
             let interimTranscript = '';
             for (let i = event.resultIndex; i < event.results.length; ++i) {
+                let transcriptPart = event.results[i][0].transcript;
+
                 if (event.results[i].isFinal) {
-                    // Adiciona o resultado final ao texto, com a primeira letra maiúscula
-                    let newSentence = event.results[i][0].transcript.trim();
-                    finalTranscript += (finalTranscript ? '\n' : '') + newSentence.charAt(0).toUpperCase() + newSentence.slice(1);
+                    //  Processar o texto final com a nova função =====
+                    let textoProcessado = processarComandos(transcriptPart.trim());
+                    
+                    // Adiciona ao transcrito final, capitalizando a primeira letra após um ponto ou quebra de linha
+                    if (finalTranscript.endsWith('. ') || finalTranscript.endsWith('\n') || finalTranscript === '') {
+                        textoProcessado = textoProcessado.charAt(0).toUpperCase() + textoProcessado.slice(1);
+                    }
+                    finalTranscript += (finalTranscript.endsWith('\n') || finalTranscript === '' ? '' : ' ') + textoProcessado;
+
                 } else {
-                    interimTranscript += event.results[i][0].transcript;
+                    interimTranscript += transcriptPart;
                 }
             }
-            // Atualiza a textarea com o resultado final + o resultado parcial
-            servicesTextarea.value = finalTranscript + (interimTranscript ? '\n' + interimTranscript : '');
+    
+            servicesTextarea.value = finalTranscript.replace(/\n /g, '\n') + (interimTranscript ? ' ' + interimTranscript : '');
         };
 
     } else {
