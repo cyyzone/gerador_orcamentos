@@ -1,0 +1,45 @@
+<!<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>Corrigir Ortografia</title>
+    <!--<style>
+        body { font-family: Arial, sans-serif; margin: 2em; background-color: #f4f4f9; }
+        .container { max-width: 700px; margin: auto; background: white; padding: 2em; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h1 { color: #ffc107; }
+        p { font-size: 1.1em; }
+        textarea { width: 100%; padding: 0.8em; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; font-size: 1em; }
+        button { display: block; width: 100%; padding: 1em; background-color: #28a745; color: white; border: none; border-radius: 4px; font-size: 1.1em; cursor: pointer; margin-top: 1.5em; }
+        button:hover { background-color: #218838; }
+        .correcoes { background-color: #fff3cd; border-left: 5px solid #ffeeba; padding: 1em; margin-bottom: 1.5em; border-radius: 4px; }
+    </style> -->
+</head>
+<body>
+    <div class="container">
+        <h1>Atenção: Revisão Ortográfica</h1>
+        <p>Encontramos algumas palavras que podem estar escritas incorretamente. Por favor, revise o texto abaixo e corrija o que for necessário.</p>
+        
+        <div class="correcoes">
+            <strong>Palavras encontradas:</strong>
+            <ul>
+            {% for palavra, sugestao in erros.items() %}
+                <li><strong>{{ palavra }}</strong> (Sugestão: <em>{{ sugestao }}</em>)</li>
+            {% endfor %}
+            </ul>
+        </div>
+
+        <form action="/gerar" method="post">
+            <input type="hidden" name="cliente_nome" value="{{ dados.cliente_nome }}">
+            <input type="hidden" name="data_orcamento" value="{{ dados.data_orcamento }}">
+            <input type="hidden" name="valor_total" value="{{ dados.valor_total }}">
+            <input type="hidden" name="forma_pagamento" value="{{ dados.forma_pagamento }}">
+            <label for="servicos_corrigidos">Serviços (corrija se necessário):</label>
+            <textarea name="servicos_inclusos" id="servicos_corrigidos" rows="10">{{ dados.servicos_inclusos }}</textarea>
+
+            <button type="submit">Gerar Orçamento com Texto Corrigido</button>
+        </form>
+    </div>
+</body>
+</html>

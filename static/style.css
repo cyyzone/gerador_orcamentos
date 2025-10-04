@@ -1,0 +1,146 @@
+
+    /* Estilos Gerais e para Telas Maiores (Desktop-First) */
+    :root {
+        --cor-primaria: #007BFF;
+        --cor-primaria-hover: #0056b3;
+        --cor-fundo: #f4f4f9;
+        --cor-container: #ffffff;
+        --cor-texto: #333;
+        --sombra: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        margin: 0;
+        padding: 2em; /* Espaçamento externo para telas grandes */
+        background-color: var(--cor-fundo);
+        color: var(--cor-texto);
+        line-height: 1.6;
+    }
+
+    .container {
+        max-width: 700px;
+        margin: auto;
+        background: var(--cor-container);
+        padding: 2em;
+        border-radius: 8px;
+        box-shadow: var(--sombra);
+    }
+
+    h1, h2 {
+        text-align: center;
+        color: var(--cor-texto);
+    }
+
+    h2 {
+        font-weight: normal;
+        margin-top: -10px;
+        color: #666;
+    }
+
+    label {
+        display: block;
+        margin-top: 1.5em;
+        margin-bottom: 0.5em;
+        font-weight: bold;
+    }
+
+    input[type="text"],
+    textarea {
+        width: 100%;
+        padding: 0.8em;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-sizing: border-box; /* Garante que padding não afete a largura total */
+        font-size: 1em;
+    }
+
+    textarea {
+        resize: vertical;
+        min-height: 100px;
+    }
+
+    button {
+        display: block;
+        width: 100%;
+        padding: 1em;
+        background-color: var(--cor-primaria);
+        color: white;
+        border: none;
+        border-radius: 4px;
+        font-size: 1.1em;
+        cursor: pointer;
+        margin-top: 2em;
+        transition: background-color 0.2s;
+    }
+
+    button:hover {
+        background-color: var(--cor-primaria-hover);
+    }
+
+    /* --- ✨ A Mágica da Responsividade Acontece Aqui ✨ --- */
+    /* Estilos para telas com largura máxima de 768px (tablets e celulares) */
+    @media (max-width: 768px) {
+        body {
+            padding: 0; /* Remove o espaçamento externo no celular */
+        }
+
+        .container {
+            width: 100%;
+            padding: 1.5em; /* Reduz o espaçamento interno */
+            border-radius: 0; /* Remove as bordas arredondadas para ocupar a tela toda */
+            box-shadow: none; /* Remove a sombra */
+            min-height: 100vh; /* Garante que o container ocupe a altura toda da tela */
+        }
+
+        h1 {
+            font-size: 1.8em;
+        }
+
+        label {
+            margin-top: 1.2em;
+        }
+    }
+
+    /* Estilos para o botão de microfone */
+.label-com-botao {
+    display: flex;
+    justify-content: space-between; /* Alinha itens nas extremidades */
+    align-items: center;      /* Alinha verticalmente */
+    margin-top: 1.5em;
+    margin-bottom: 0.5em;
+}
+
+#btn-mic {
+    background-color: #e9ecef;
+    border: 1px solid #ced4da;
+    border-radius: 50%; /* Deixa o botão redondo */
+    width: 40px;
+    height: 40px;
+    font-size: 1.5em;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0;
+    transition: background-color 0.2s, box-shadow 0.2s;
+}
+
+#btn-mic:hover {
+    background-color: #dee2e6;
+}
+
+#btn-mic.recording {
+    background-color: #f8d7da; /* Fundo vermelho claro quando gravando */
+    border-color: #f5c2c7;
+    box-shadow: 0 0 8px rgba(255, 0, 0, 0.5);
+}
+/* Estilo para a instrução do microfone */
+.mic-instruction {
+    display: block; /* Garante que o texto ocupe a linha */
+    text-align: right; /* Alinha o texto à direita, abaixo do botão */
+    color: #6c757d; /* Cor de texto sutil */
+    font-size: 0.85em; /* Tamanho de fonte um pouco menor */
+    margin-top: -5px; /* Puxa o texto um pouco para cima */
+    padding-right: 5px; /* Pequeno espaçamento para alinhar com o botão */
+}
