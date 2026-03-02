@@ -48,7 +48,9 @@
                     <p><strong>Data:</strong> {{ orcamento.data_orcamento }}</p>
                     <p><strong>Valor:</strong> R$ {{ orcamento.valor_total }}</p>
                 </div>
-                <a href="{{ url_for('baixar_pdf', id=orcamento.id) }}" class="btn-baixar">Baixar PDF</a>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end;">
+                    <a href="{{ url_for('baixar_pdf', id=orcamento.id) }}" class="btn-baixar">Baixar PDF</a>
+                </div>
             </div>
             {% endfor %}
         {% else %}

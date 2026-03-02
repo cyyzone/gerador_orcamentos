@@ -42,6 +42,20 @@
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     const micButton = document.getElementById('btn-mic');
     const servicesTextarea = document.getElementById('servicos_inclusos');
+    const campoValor = document.getElementById('valor_total');
+    if (campoValor) {
+        campoValor.addEventListener('input', function(e) {
+            let valor = e.target.value.replace(/\D/g, ''); // Tira tudo que não é número
+            if (valor === '') {
+                e.target.value = '';
+                return;
+            }
+            valor = (parseInt(valor) / 100).toFixed(2) + '';
+            valor = valor.replace('.', ',');
+            valor = valor.replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.');
+            e.target.value = valor;
+        });
+    }
 
     if (SpeechRecognition) {
         const recognition = new SpeechRecognition();
