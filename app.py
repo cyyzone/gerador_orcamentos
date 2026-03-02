@@ -1,19 +1,32 @@
-# Arquivo: app.py (com cabeçalho formatado)
-from flask import Flask, render_template, request, send_from_directory, url_for, redirect, session
-from docx import Document
-from docx.shared import Pt
+from flask import Flask, render_template, request, url_for, redirect, session, send_file
+from flask_sqlalchemy import SQLAlchemy
+from fpdf import FPDF
+from spellchecker import SpellChecker
 import os
 import datetime
 import re
-from spellchecker import SpellChecker
+import io
 
-# --- CONFIGURAÇÃO DA APLICAÇÃO ---
 app = Flask(__name__)
-UPLOAD_FOLDER = 'orcamentos_gerados'
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.secret_key = 'agora-vai-funcionar-com-certeza-2025'
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
+# Configuração da Base de Dados
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///orcamentos.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db = SQLAlchemy(app)
+
+# Modelo da Tabela
+class Orcamento(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    cliente_nome = db.Column(db.String(100), nullable=False)
+    data_orcamento = db.Column(db.String(20), nullable=False)
+    servicos_inclusos = db.Column(db.Text, nullable=False)
+    valor_total = db.Column(db.String(50), nullable=False)
+    forma_pagamento = db.Column(db.String(50), nullable=False)
+
+# Cria a base de dados automaticamente
+with app.app_context():
+    db.create_all()
 
 DADOS_EMPRESA = {
     "razao_social": "NOME DA EMPRESA",
@@ -23,59 +36,6 @@ DADOS_EMPRESA = {
     "endereco": "Endereço completo",
     "telefone": "(41) 90000-1549"
 }
-# ---------------------------------------------------
-
-def gerar_orcamento_docx(dados):
-    try:
-        doc = Document()
-        
-        # --- Cabeçalho da Empresa ---
-        # Adiciona cada linha de informação com a formatação correta
-        p_razao = doc.add_paragraph()
-        p_razao.add_run(dados["razao_social"]).bold = True
-
-        p_nome = doc.add_paragraph()
-        p_nome.add_run(dados["nome_responsavel"]).bold = True
-
-        p_cnpj = doc.add_paragraph()
-        p_cnpj.add_run('CNPJ: ').bold = True
-        p_cnpj.add_run(dados["cnpj"])
-
-        p_im = doc.add_paragraph()
-        p_im.add_run('Inscrição Municipal: ').bold = True
-        p_im.add_run(dados["inscricao_municipal"])
-
-        doc.add_paragraph(dados["endereco"])
-        doc.add_paragraph(dados["telefone"])
-        
-        doc.add_paragraph("\n" + ("-"*50) + "\n")
-
-        titulo = doc.add_paragraph()
-        run_titulo = titulo.add_run("ORÇAMENTO")
-        run_titulo.bold = True
-        run_titulo.font.size = Pt(18)
-        titulo.alignment = 1
-        doc.add_paragraph(f"\nCliente: {dados['cliente_nome']}")
-        doc.add_paragraph(f"Data: {dados['data_orcamento']}\n")
-        doc.add_heading("Serviços Inclusos:", level=2)
-        for servico in dados["servicos_inclusos"]:
-            doc.add_paragraph(servico, style='List Bullet')
-        doc.add_paragraph("\n")
-        paragrafo_valor = doc.add_paragraph()
-        paragrafo_valor.add_run("Valor Total: ").bold = True
-        paragrafo_valor.add_run(f"R$ {dados['valor_total']}")
-        paragrafo_pagamento = doc.add_paragraph()
-        paragrafo_pagamento.add_run("Forma de Pagamento: ").bold = True
-        paragrafo_pagamento.add_run(dados['forma_pagamento'])
-        nome_cliente_seguro = re.sub(r'[^a-zA-Z0-9_.-]', '_', dados['cliente_nome']).lower()
-        nome_arquivo_base = f"orcamento_{nome_cliente_seguro}_{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}"
-        nome_arquivo_docx = f"{nome_arquivo_base}.docx"
-        caminho_completo = os.path.join(app.config['UPLOAD_FOLDER'], nome_arquivo_docx)
-        doc.save(caminho_completo)
-        return nome_arquivo_docx
-    except Exception as e:
-        print(f"Ocorreu um erro ao gerar o arquivo DOCX: {e}")
-        return None
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -130,26 +90,83 @@ def gerar_rota():
     return gerar_orcamento(dados_formulario)
 
 def gerar_orcamento(dados):
-    dados_para_doc = dados.copy()
-    dados_para_doc["servicos_inclusos"] = [s.strip().capitalize() for s in dados["servicos_inclusos"].splitlines() if s.strip()]
+    # Formata os serviços para guardar na base de dados
+    servicos_lista = [s.strip().capitalize() for s in dados["servicos_inclusos"].splitlines() if s.strip()]
+    servicos_texto = "\n".join(servicos_lista)
     
-    dados_para_doc.update(DADOS_EMPRESA) 
+    novo_orcamento = Orcamento(
+        cliente_nome=dados['cliente_nome'],
+        data_orcamento=dados['data_orcamento'],
+        servicos_inclusos=servicos_texto,
+        valor_total=dados['valor_total'],
+        forma_pagamento=dados['forma_pagamento']
+    )
     
-    nome_docx = gerar_orcamento_docx(dados_para_doc)
+    db.session.add(novo_orcamento)
+    db.session.commit()
     
-    if nome_docx:
-        return redirect(url_for('pagina_resultado', filename=nome_docx))
-    else:
-        return "<h1>Erro ao gerar o documento. Verifique o console do servidor.</h1>", 500
+    return redirect(url_for('historico'))
 
-@app.route('/resultado/<filename>')
-def pagina_resultado(filename):
-    url_docx = url_for('download_file', filename=filename)
-    return render_template('resultado.html', url_docx=url_docx)
+@app.route('/historico')
+def historico():
+    orcamentos = Orcamento.query.order_by(Orcamento.id.desc()).all()
+    return render_template('historico.html', orcamentos=orcamentos)
 
-@app.route('/downloads/<filename>')
-def download_file(filename):
-    return send_from_directory(app.config['UPLOAD_FOLDER'], filename, as_attachment=True)
+@app.route('/baixar_pdf/<int:id>')
+def baixar_pdf(id):
+    orcamento = Orcamento.query.get_or_404(id)
+
+    pdf = FPDF()
+    pdf.add_page()
+    
+    # Cabeçalho da Empresa
+    pdf.set_font("Helvetica", 'B', 14)
+    pdf.cell(0, 10, text=DADOS_EMPRESA["razao_social"], new_x="LMARGIN", new_y="NEXT", align='C')
+    
+    pdf.set_font("Helvetica", size=10)
+    pdf.cell(0, 10, text=f"{DADOS_EMPRESA['nome_responsavel']} - CNPJ: {DADOS_EMPRESA['cnpj']}", new_x="LMARGIN", new_y="NEXT", align='C')
+    pdf.cell(0, 10, text=f"Inscrição Municipal: {DADOS_EMPRESA['inscricao_municipal']}", new_x="LMARGIN", new_y="NEXT", align='C')
+    pdf.cell(0, 10, text=DADOS_EMPRESA["endereco"], new_x="LMARGIN", new_y="NEXT", align='C')
+    pdf.cell(0, 10, text=DADOS_EMPRESA["telefone"], new_x="LMARGIN", new_y="NEXT", align='C')
+    
+    pdf.line(10, pdf.get_y(), 200, pdf.get_y())
+    pdf.ln(10)
+
+    # Título
+    pdf.set_font("Helvetica", 'B', 18)
+    pdf.cell(0, 10, text="ORÇAMENTO", new_x="LMARGIN", new_y="NEXT", align='C')
+    pdf.ln(5)
+
+    # Dados do Cliente
+    pdf.set_font("Helvetica", 'B', 12)
+    pdf.cell(0, 10, text=f"Cliente: {orcamento.cliente_nome}", new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(0, 10, text=f"Data: {orcamento.data_orcamento}", new_x="LMARGIN", new_y="NEXT")
+    pdf.ln(5)
+
+    # Serviços
+    pdf.set_font("Helvetica", 'B', 14)
+    pdf.cell(0, 10, text="Serviços Inclusos:", new_x="LMARGIN", new_y="NEXT")
+    pdf.set_font("Helvetica", size=12)
+    for servico in orcamento.servicos_inclusos.split('\n'):
+        if servico.strip():
+            pdf.cell(0, 8, text=f"- {servico}", new_x="LMARGIN", new_y="NEXT")
+    
+    pdf.ln(10)
+
+    # Valores
+    pdf.set_font("Helvetica", 'B', 12)
+    pdf.cell(0, 10, text=f"Valor Total: R$ {orcamento.valor_total}", new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(0, 10, text=f"Forma de Pagamento: {orcamento.forma_pagamento}", new_x="LMARGIN", new_y="NEXT")
+
+    pdf_bytes = pdf.output()
+    nome_seguro = re.sub(r'[^a-zA-Z0-9_.-]', '_', orcamento.cliente_nome).lower()
+
+    return send_file(
+        io.BytesIO(pdf_bytes),
+        mimetype='application/pdf',
+        as_attachment=True,
+        download_name=f"orcamento_{nome_seguro}.pdf"
+    )
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')
