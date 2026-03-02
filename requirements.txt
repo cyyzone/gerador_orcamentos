@@ -1,3 +1,4 @@
 Flask
-python-docx
+Flask-SQLAlchemy
+fpdf2
 pyspellchecker
