@@ -31,8 +31,11 @@
             <label for="forma_pagamento">Forma de Pagamento:</label>
             <input type="text" id="forma_pagamento" name="forma_pagamento" value="A combinar" required>
 
-            <button type="submit">Verificar e Gerar Orçamento (.docx)</button>
+            <button type="submit">Verificar e Gerar Orçamento (.PDF)</button>
         </form>
+        <div style="text-align: center; margin-top: 20px;">
+            <a href="{{ url_for('historico') }}" style="color: var(--cor-primaria); font-weight: bold; text-decoration: none;">Ver Histórico de Orçamentos</a>
+        </div>
     </div>
     <script>
     // Verifica se o navegador suporta a Web Speech API
