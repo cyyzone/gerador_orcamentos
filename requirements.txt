@@ -3,3 +3,4 @@ Flask-SQLAlchemy
 fpdf2
 pyspellchecker
 psycopg2-binary
+gunicorn app:app
