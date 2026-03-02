@@ -2,3 +2,4 @@ Flask
 Flask-SQLAlchemy
 fpdf2
 pyspellchecker
+psycopg2-binary

@@ -8,10 +8,15 @@ import re
 import io
 
 app = Flask(__name__)
-app.secret_key = 'agora-vai-funcionar-com-certeza-2025'
+app.secret_key = os.environ.get('SECRET_KEY')
 
-# Configuração da Base de Dados
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///orcamentos.db'
+# Tenta pegar a URL do Render/Supabase. Se não encontrar, usa o SQLite (local).
+database_url = os.environ.get('DATABASE_URL')
+
+if database_url and database_url.startswith("postgres://"):
+    database_url = database_url.replace("postgres://", "postgresql://", 1)
+
+app.config['SQLALCHEMY_DATABASE_URI'] = database_url or 'sqlite:///orcamentos.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
