@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>Histórico de Orçamentos</title>
+    <style>
+        .orcamento-card {
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .orcamento-info p {
+            margin: 5px 0;
+        }
+        .btn-baixar {
+            background-color: #28a745;
+            color: white;
+            padding: 10px 15px;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .btn-baixar:hover {
+            background-color: #218838;
+        }
+        .btn-voltar {
+            background-color: #6c757d;
+            margin-top: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Histórico de Orçamentos</h1>
+        
+        {% if orcamentos %}
+            {% for orcamento in orcamentos %}
+            <div class="orcamento-card">
+                <div class="orcamento-info">
+                    <p><strong>Cliente:</strong> {{ orcamento.cliente_nome }}</p>
+                    <p><strong>Data:</strong> {{ orcamento.data_orcamento }}</p>
+                    <p><strong>Valor:</strong> R$ {{ orcamento.valor_total }}</p>
+                </div>
+                <a href="{{ url_for('baixar_pdf', id=orcamento.id) }}" class="btn-baixar">Baixar PDF</a>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p style="text-align: center;">Nenhum orçamento gerado ainda.</p>
+        {% endif %}
+
+        <br>
+        <a href="{{ url_for('index') }}" style="text-decoration: none;">
+            <button type="button" class="btn-voltar">Criar Novo Orçamento</button>
+        </a>
+    </div>
+</body>
+</html>
